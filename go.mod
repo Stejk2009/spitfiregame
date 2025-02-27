@@ -1,4 +1,4 @@
-module github.com/stevenkelly/Git/Homegit/game
+module github.com/Stejk2009/spitfiregame
 
 go 1.17
 
