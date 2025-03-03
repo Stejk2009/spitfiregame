@@ -469,7 +469,6 @@ func (s *Spitfire) Fire() {
 
 func (s *Spitfire) CheckCollisions() {
 	var itemsToRemove []int
-	var bulletsToRemove []int
 
 	planeWidth := float64(s.Image.Bounds().Dx()) * 0.15
 	planeHeight := float64(s.Image.Bounds().Dy()) * 0.15
@@ -482,8 +481,9 @@ func (s *Spitfire) CheckCollisions() {
 				bullet.X+float64(bullet.Image.Bounds().Dx()) > item.X &&
 				bullet.Y < item.Y+float64(item.Image.Bounds().Dy())*item.Scale &&
 				bullet.Y+float64(bullet.Image.Bounds().Dy()) > item.Y {
-				itemsToRemove = append(itemsToRemove, i)
-				bulletsToRemove = append(bulletsToRemove, j)
+				// Remove all bullets and the item immediately
+				s.Bullets = []*Bullet{}
+				s.Items = append(s.Items[:i], s.Items[i+1:]...)
 				if item.Type == "health" || item.Type == "upgrade" {
 					s.Score -= 100
 					if s.Score < 0 {
@@ -521,14 +521,10 @@ func (s *Spitfire) CheckCollisions() {
 
 	// Sort indices in descending order
 	sort.Sort(sort.Reverse(sort.IntSlice(itemsToRemove)))
-	sort.Sort(sort.Reverse(sort.IntSlice(bulletsToRemove)))
 
-	// Remove items and bullets after iteration
+	// Remove items after iteration
 	for _, i := range itemsToRemove {
 		s.Items = append(s.Items[:i], s.Items[i+1:]...)
-	}
-	for _, j := range bulletsToRemove {
-		s.Bullets = append(s.Bullets[:j], s.Bullets[j+1:]...)
 	}
 }
 
