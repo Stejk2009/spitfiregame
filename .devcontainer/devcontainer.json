@@ -1,17 +1,18 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/go
 {
-	"name": "Go Dev Container",
-	"dockerFile": "Dockerfile",
-	"context": "..",
-	"workspaceFolder": "/workspace",
-	"extensions": [
-		"golang.go",
-		"ms-vscode.go"
-	],
-	"settings": {
-		"go.gopath": "/go",
-		"go.useLanguageServer": true
-	},
-	"postCreateCommand": "go mod tidy"
+    "name": "Go Dev Container",
+    "dockerFile": "Dockerfile",
+    "context": ".",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.shell.linux": "/bin/bash"
+            },
+            "extensions": [
+                "golang.go",
+                "ms-vscode.cpptools"
+            ]
+        }
+    },
+    "postCreateCommand": "go mod tidy",
+    "remoteUser": "vscode"
 }
