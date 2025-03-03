@@ -1,13 +1,13 @@
 package main
 
 import (
+	"embed"
 	"image"
 	"image/color"
 	_ "image/jpeg" // Import the JPEG decoder
 	_ "image/png"  // Import the PNG decoder
 	"log"
 	"math/rand"
-	"os"
 	"sort"
 	"strconv"
 	"time"
@@ -21,9 +21,19 @@ import (
 	"golang.org/x/image/font/opentype"
 )
 
+//go:embed assets/images/background.png
+//go:embed assets/images/plane.png
+//go:embed assets/images/Tiles/tile_0024.png
+//go:embed assets/images/Tiles/tile_0015.png
+//go:embed assets/images/Tiles/tile_0016.png
+//go:embed assets/images/Tiles/tile_0005.png
+//go:embed assets/images/Tiles/tile_0006.png
+//go:embed assets/images/Tiles/tile_0012.png
+var embeddedFiles embed.FS
+
 var (
 	gameOverFont    font.Face
-	levelUpFont     font.Face     // New font for level up sign
+	levelUpFont     font.Face
 	backgroundImage *ebiten.Image // Background image
 	boldFont        font.Face     // Bold font for score, high score, and level
 	smallBoldFont   font.Face     // Smaller bold font for health text
@@ -75,7 +85,7 @@ func init() {
 	}
 
 	// Load background image
-	bgFile, err := os.Open("assets/images/background.png")
+	bgFile, err := embeddedFiles.Open("assets/images/background.png")
 	if err != nil {
 		log.Fatalf("Failed to open background image file: %v", err)
 	}
@@ -95,7 +105,7 @@ type Bullet struct {
 }
 
 func NewBullet(x, y float64, imagePath string) *Bullet {
-	file, err := os.Open(imagePath)
+	file, err := embeddedFiles.Open(imagePath)
 	if err != nil {
 		log.Fatalf("Failed to open bullet image file: %v", err)
 	}
@@ -132,7 +142,7 @@ type Item struct {
 }
 
 func NewItem(imagePath string, x, y float64, itemType string) *Item {
-	file, err := os.Open(imagePath)
+	file, err := embeddedFiles.Open(imagePath)
 	if err != nil {
 		log.Fatalf("Failed to open image file: %v", err)
 	}
@@ -180,19 +190,14 @@ func (i *Item) Update(level int) {
 		i.Scale = 2.0 // Double the size at level 2
 	} else if level == 3 {
 		i.Scale = 3.0 // Triple the size at level 3
+		i.Y += 2      // Further increase item speed at level 3
 	} else if level == 4 {
 		i.Scale = 4.0 // Quadruple the size at level 4
-		i.Y += 2      // Further increase item speed at level 4
+		i.Y += 3      // Further increase item speed at level 4
 	}
 }
 
 func (i *Item) Draw(screen *ebiten.Image) {
-	// Draw shadow
-	shadowOp := &ebiten.DrawImageOptions{}
-	shadowOp.GeoM.Scale(i.Scale, i.Scale)
-	shadowOp.GeoM.Translate(i.X+3, i.Y+3) // Offset the shadow slightly
-	screen.DrawImage(i.Image, shadowOp)
-
 	// Draw item
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(i.Scale, i.Scale)
@@ -216,7 +221,7 @@ type Spitfire struct {
 }
 
 func NewSpitfire() *Spitfire {
-	file, err := os.Open("assets/images/plane.png")
+	file, err := embeddedFiles.Open("assets/images/plane.png")
 	if err != nil {
 		log.Fatalf("Failed to open image file: %v", err)
 	}
@@ -263,17 +268,20 @@ func (s *Spitfire) Update() {
 		s.LevelUp(2)
 	}
 
+	// Increase the speed of the plane's movement
+	planeSpeed := 3.5 // Adjust this value to increase the speed
+
 	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
-		s.Y -= 2
+		s.Y -= planeSpeed
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
-		s.Y += 2
+		s.Y += planeSpeed
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
-		s.X -= 2
+		s.X -= planeSpeed
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
-		s.X += 2
+		s.X += planeSpeed
 	}
 
 	// Check if the space key is pressed to fire bullets
@@ -566,7 +574,7 @@ func (s *Spitfire) SpawnItems() {
 	}
 	if rand.Float64() < 0.001 { // Less frequent upgrade items
 		x := rand.Float64() * 640
-		imagePath := "assets/images/Tiles/tile_0007.png" // Ensure the correct path
+		imagePath := "assets/images/Tiles/tile_0015.png" // Ensure the correct path
 		item := NewItem(imagePath, x, 0, "upgrade")
 		s.Items = append(s.Items, item)
 	}
